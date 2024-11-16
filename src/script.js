@@ -7,6 +7,7 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
  * Loaders
  */
 const gltfLoader = new GLTFLoader();
+const cubeTextureLoader = new THREE.CubeTextureLoader();
 
 /**
  * Base
@@ -19,6 +20,21 @@ const canvas = document.querySelector('canvas.webgl');
 
 // Scene
 const scene = new THREE.Scene();
+
+/**
+ * Environment map
+ */
+// LDR cube texture
+const environmentMap = cubeTextureLoader.load([
+    '/environmentMaps/0/px.png',
+    '/environmentMaps/0/nx.png',
+    '/environmentMaps/0/py.png',
+    '/environmentMaps/0/ny.png',
+    '/environmentMaps/0/pz.png',
+    '/environmentMaps/0/nz.png'
+]);
+
+scene.background = environmentMap;
 
 /**
  * Torus Knot
@@ -37,7 +53,11 @@ gltfLoader.load(
     'models/FlightHelmet/glTF/FlightHelmet.gltf',
     (gltf) =>
     {
+        gltf.scene.scale.set(10, 10, 10);
         scene.add(gltf.scene);
+
+        // Debug
+        gui.add(gltf.scene.rotation, 'y').min(- Math.PI).max(Math.PI).step(0.001).name('rotation');
     }
 );
 
