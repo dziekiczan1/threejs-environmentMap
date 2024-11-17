@@ -79,16 +79,45 @@ gui.add(scene.backgroundRotation, 'y').min(0).max(Math.PI * 2).step(0.001).name(
 // scene.background = environmentMap;
 
 // Ground projected skybox
-rgbeLoader.load('/environmentMaps/0/2k.hdr', (environmentMap) => {
-    environmentMap.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = environmentMap;
+// rgbeLoader.load('/environmentMaps/0/2k.hdr', (environmentMap) => {
+//     environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+//     scene.environment = environmentMap;
+//
+//     // Skybox
+//     const groundedSkybox = new GroundedSkybox(environmentMap, 15, 70);
+//     // groundedSkybox.material.wireframe = true;
+//     groundedSkybox.position.y = 15;
+//     scene.add(groundedSkybox);
+// });
 
-    // Skybox
-    const groundedSkybox = new GroundedSkybox(environmentMap, 15, 70);
-    // groundedSkybox.material.wireframe = true;
-    groundedSkybox.position.y = 15;
-    scene.add(groundedSkybox);
+/**
+ * Real time environment map
+ */
+// Base environment map
+const environmentMap = textureLoader.load('/environmentMaps/blockadesLabsSkybox/interior_views_cozy_wood_cabin_with_cauldron_and_p.jpg');
+environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+environmentMap.colorSpace = THREE.SRGBColorSpace;
+
+scene.background = environmentMap;
+
+// Holy donut
+const holyDonut = new THREE.Mesh(
+    new THREE.TorusGeometry(8, 0.5),
+    new THREE.MeshBasicMaterial({color: new THREE.Color(10, 4, 2)})
+);
+holyDonut.position.y = 3.5;
+holyDonut.layers.enable(1);
+scene.add(holyDonut);
+
+// Cube render target
+const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
+    type: THREE.HalfFloatType,
 });
+scene.environment = cubeRenderTarget.texture;
+
+// Cube camera
+const cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRenderTarget);
+cubeCamera.layers.set(1);
 
 /**
  * Torus Knot
@@ -97,7 +126,7 @@ const torusKnot = new THREE.Mesh(
     new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
     new THREE.MeshStandardMaterial({
         metalness: 1,
-        roughness: 0.3,
+        roughness: 0,
         color: 0xaaaaaa
     })
 );
@@ -170,6 +199,13 @@ const tick = () =>
 {
     // Time
     const elapsedTime = clock.getElapsedTime();
+
+    // Real time environment map
+    if(holyDonut) {
+        holyDonut.rotation.x = Math.sin(elapsedTime) * 2;
+
+        cubeCamera.update(renderer, scene);
+    }
 
     // Update controls
     controls.update();
