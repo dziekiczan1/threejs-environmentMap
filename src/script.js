@@ -2,12 +2,17 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import GUI from 'lil-gui';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
+import {RGBELoader} from "three/examples/jsm/loaders/RGBELoader";
+import {EXRLoader} from "three/examples/jsm/loaders/EXRLoader";
 
 /**
  * Loaders
  */
 const gltfLoader = new GLTFLoader();
 const cubeTextureLoader = new THREE.CubeTextureLoader();
+const rgbeLoader = new RGBELoader();
+// const exrLoader = new THREE.EXRLoader();
+const textureLoader = new THREE.TextureLoader();
 
 /**
  * Base
@@ -24,25 +29,66 @@ const scene = new THREE.Scene();
 /**
  * Environment map
  */
+scene.environmentIntensity = 4;
+scene.backgroundBlurriness = 0;
+scene.backgroundIntensity = 1;
+// scene.backgroundRotation.x = 1;
+// scene.environmentRotation.x = 2;
+
+gui.add(scene, 'environmentIntensity').min(0).max(10).step(0.001).name('environment intensity');
+gui.add(scene, 'backgroundBlurriness').min(0).max(1).step(0.001).name('background blurriness');
+gui.add(scene, 'backgroundIntensity').min(0).max(10).step(0.001).name('background intensity');
+gui.add(scene.backgroundRotation, 'x').min(0).max(Math.PI * 2).step(0.001).name('background rotation x');
+gui.add(scene.backgroundRotation, 'y').min(0).max(Math.PI * 2).step(0.001).name('background rotation y');
+
 // LDR cube texture
-const environmentMap = cubeTextureLoader.load([
-    '/environmentMaps/0/px.png',
-    '/environmentMaps/0/nx.png',
-    '/environmentMaps/0/py.png',
-    '/environmentMaps/0/ny.png',
-    '/environmentMaps/0/pz.png',
-    '/environmentMaps/0/nz.png'
-]);
+// const environmentMap = cubeTextureLoader.load([
+//     '/environmentMaps/0/px.png',
+//     '/environmentMaps/0/nx.png',
+//     '/environmentMaps/0/py.png',
+//     '/environmentMaps/0/ny.png',
+//     '/environmentMaps/0/pz.png',
+//     '/environmentMaps/0/nz.png'
+// ]);
+//
+// scene.environment = environmentMap;
+// scene.background = environmentMap;
 
+// HDR cube texture
+// rgbeLoader.load('/environmentMaps/0/2k.hdr', (environmentMap) => {
+//     environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+//
+//     scene.environment = environmentMap;
+//     scene.background = environmentMap;
+// });
+
+// HDR equirectangular texture
+// exrLoader.load('/environmentMaps/nvidiaCanvas-4k.exr', (environmentMap) => {
+//     environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+//
+//     scene.environment = environmentMap;
+//     scene.background = environmentMap;
+// });
+
+// LDR equirectangular texture
+const environmentMap = textureLoader.load('/environmentMaps/blockadesLabsSkybox/fantasy_lands_castles_at_night.jpg');
+environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+environmentMap.colorSpace = THREE.SRGBColorSpace;
+
+scene.environment = environmentMap;
 scene.background = environmentMap;
-
 /**
  * Torus Knot
  */
 const torusKnot = new THREE.Mesh(
     new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
-    new THREE.MeshBasicMaterial()
+    new THREE.MeshStandardMaterial({
+        metalness: 1,
+        roughness: 0.3,
+        color: 0xaaaaaa
+    })
 );
+torusKnot.position.x = -4;
 torusKnot.position.y = 4;
 scene.add(torusKnot);
 
@@ -55,9 +101,6 @@ gltfLoader.load(
     {
         gltf.scene.scale.set(10, 10, 10);
         scene.add(gltf.scene);
-
-        // Debug
-        gui.add(gltf.scene.rotation, 'y').min(- Math.PI).max(Math.PI).step(0.001).name('rotation');
     }
 );
 
