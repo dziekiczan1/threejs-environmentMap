@@ -4,6 +4,7 @@ import GUI from 'lil-gui';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import {RGBELoader} from "three/examples/jsm/loaders/RGBELoader";
 import {EXRLoader} from "three/examples/jsm/loaders/EXRLoader";
+import {GroundedSkybox} from "three/addons";
 
 /**
  * Loaders
@@ -29,7 +30,7 @@ const scene = new THREE.Scene();
 /**
  * Environment map
  */
-scene.environmentIntensity = 4;
+scene.environmentIntensity = 1;
 scene.backgroundBlurriness = 0;
 scene.backgroundIntensity = 1;
 // scene.backgroundRotation.x = 1;
@@ -71,12 +72,24 @@ gui.add(scene.backgroundRotation, 'y').min(0).max(Math.PI * 2).step(0.001).name(
 // });
 
 // LDR equirectangular texture
-const environmentMap = textureLoader.load('/environmentMaps/blockadesLabsSkybox/fantasy_lands_castles_at_night.jpg');
-environmentMap.mapping = THREE.EquirectangularReflectionMapping;
-environmentMap.colorSpace = THREE.SRGBColorSpace;
+// const environmentMap = textureLoader.load('/environmentMaps/blockadesLabsSkybox/fantasy_lands_castles_at_night.jpg');
+// environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+// environmentMap.colorSpace = THREE.SRGBColorSpace;
+// scene.environment = environmentMap;
+// scene.background = environmentMap;
 
-scene.environment = environmentMap;
-scene.background = environmentMap;
+// Ground projected skybox
+rgbeLoader.load('/environmentMaps/0/2k.hdr', (environmentMap) => {
+    environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = environmentMap;
+
+    // Skybox
+    const groundedSkybox = new GroundedSkybox(environmentMap, 15, 70);
+    // groundedSkybox.material.wireframe = true;
+    groundedSkybox.position.y = 15;
+    scene.add(groundedSkybox);
+});
+
 /**
  * Torus Knot
  */
